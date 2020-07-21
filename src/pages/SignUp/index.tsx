@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   TextInput,
+  Alert,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
@@ -19,6 +20,7 @@ import Button from '../../components/Button';
 import logo from '../../assets/logo.png';
 
 import getValidationErrors from '../../util/getValidationErrors';
+import api from '../../services/api';
 
 import { Container, Title, BackToSigIn, BackToSigInText } from './styles';
 
@@ -35,33 +37,43 @@ const SignUp: React.FC = () => {
 
   const { navigate } = useNavigation();
 
-  const handleSignUp = useCallback(async (data: SignUpFormData) => {
-    try {
-      formRef.current?.setErrors({});
+  const handleSignUp = useCallback(
+    async (data: SignUpFormData) => {
+      try {
+        formRef.current?.setErrors({});
 
-      const schema = Yup.object().shape({
-        nome: Yup.string().required('Campo é obrigatório'),
-        email: Yup.string()
-          .email('digite um e-mail válido')
-          .required('Campo é obrigatório'),
-        senha: Yup.string()
-          .min(6, 'Mínimo 6 digitos')
-          .required('Campo obrigatório'),
-      });
+        const schema = Yup.object().shape({
+          nome: Yup.string().required('Campo é obrigatório'),
+          email: Yup.string()
+            .email('digite um e-mail válido')
+            .required('Campo é obrigatório'),
+          senha: Yup.string()
+            .min(6, 'Mínimo 6 digitos')
+            .required('Campo obrigatório'),
+        });
 
-      await schema.validate(data, {
-        abortEarly: false,
-      });
+        await schema.validate(data, {
+          abortEarly: false,
+        });
 
-      //  await api.post('/usuarios', data);
-    } catch (error) {
-      if (error instanceof Yup.ValidationError) {
-        const errors = getValidationErrors(error);
+        await api.post('/usuarios', data);
+        Alert.alert(
+          'Cadastro realizado com sucesso!',
+          'Realize o login na aplicação',
+        );
+        navigate('SignIn');
+      } catch (error) {
+        if (error instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(error);
 
-        formRef.current?.setErrors(errors);
+          formRef.current?.setErrors(errors);
+
+          Alert.alert('Erro ao realizar cadastro!', 'Tente novamente');
+        }
       }
-    }
-  }, []);
+    },
+    [navigate],
+  );
 
   return (
     <>

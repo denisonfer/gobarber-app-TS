@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   TextInput,
+  Alert,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
@@ -19,6 +20,8 @@ import Button from '../../components/Button';
 import logo from '../../assets/logo.png';
 
 import getValidationErrors from '../../util/getValidationErrors';
+
+import { useAuth } from '../../hooks/Auth';
 
 import {
   Container,
@@ -39,30 +42,37 @@ const SignIn: React.FC = () => {
   const senhaRef = useRef<TextInput>(null);
   const { navigate } = useNavigation();
 
-  const handleSignIn = useCallback(async (data: SignInFormData) => {
-    try {
-      formRef.current?.setErrors({});
+  const { sigIn } = useAuth();
 
-      const schema = Yup.object().shape({
-        email: Yup.string()
-          .email('digite um e-mail válido')
-          .required('Campo é obrigatório'),
-        senha: Yup.string().required('Campo obrigatório'),
-      });
+  const handleSignIn = useCallback(
+    async (data: SignInFormData) => {
+      try {
+        formRef.current?.setErrors({});
 
-      await schema.validate(data, {
-        abortEarly: false,
-      });
+        const schema = Yup.object().shape({
+          email: Yup.string()
+            .email('digite um e-mail válido')
+            .required('Campo é obrigatório'),
+          senha: Yup.string().required('Campo obrigatório'),
+        });
 
-      // await sigIn({ email: data.email, senha: data.senha });
-    } catch (error) {
-      if (error instanceof Yup.ValidationError) {
-        const errors = getValidationErrors(error);
+        await schema.validate(data, {
+          abortEarly: false,
+        });
 
-        formRef.current?.setErrors(errors);
+        await sigIn({ email: data.email, senha: data.senha });
+      } catch (error) {
+        if (error instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(error);
+
+          formRef.current?.setErrors(errors);
+
+          Alert.alert('Erro ao realizar login!', 'Tente novamente');
+        }
       }
-    }
-  }, []);
+    },
+    [sigIn],
+  );
 
   return (
     <>
